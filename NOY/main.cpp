@@ -11,7 +11,7 @@ temps a;
 
 int main() {
 	setlocale(LC_ALL, "Russian");
-	LPCTSTR sPortName = L"COM3"; //!!!Назвать порт!!!
+	LPCTSTR sPortName = L"COM5"; //!!!Назвать порт!!!
 	hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	DCB dcbSerialParams = { 0 };
 	dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
@@ -37,14 +37,14 @@ int main() {
 	cout << "Введите максимальную температуру" << endl;
 	cin >> max_t;
 	a.set_max_temp(max_t);
-	int min_l = 0;
+	/*int min_l = 0;
 	int max_l = 0;
 	cout << "Введите минимальную освещённость" << endl;
 	cin >> min_l;
 	a.set_min_light(min_l);
 	cout << "Введите максимальную освещённость" << endl;
 	cin >> max_l;
-	a.set_max_light(max_l);
+	a.set_max_light(max_l);*/
 	ReadCOM();
 
 	cout << endl;
@@ -61,14 +61,8 @@ void ReadCOM()
 		if (iSize > 0)   // если что-то принято, выводим
 			while (1)
 			{
-				if (sReceivedChar > a.min_temp && sReceivedChar < a.max_temp)
 
-					cout << "Температура: " << sReceivedChar << endl;
-
-				else
-
-					cout << "Температура !не в норме!: " << sReceivedChar << endl;
-
+					cout  << sReceivedChar << endl;
 			}
 	}
 }
