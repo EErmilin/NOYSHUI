@@ -1,25 +1,33 @@
 #include <iostream>
 #include <string>
 #include <windows.h>
+#include <stdlib.h>
 #include "lib.h"
+#include <conio.h>
+#include <thread>
+
 using namespace std;
-void ReadCOM();
-void ReadCOM2();
-int k = 0;
+
+void threadFunction();
+
 HANDLE hSerial;
 temps a;
+thread thr(threadFunction);
 
 int main() {
 	setlocale(LC_ALL, "Russian");
-	LPCTSTR sPortName = L"COM5"; //!!!Назвать порт!!!
+	LPCTSTR sPortName = L"COM3"; 
 	hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	if (hSerial == INVALID_HANDLE_VALUE)
+	{
+		if (GetLastError() == ERROR_FILE_NOT_FOUND)
+		{
+			cout << "serial port does not exist.\n";
+		}
+		cout << "some other error occurred.\n";
+	}
 	DCB dcbSerialParams = { 0 };
 	dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-
-	if (!SetCommState(hSerial, &dcbSerialParams))
-	{
-		cout << "error setting serial port state\n";
-	}
 	if (!GetCommState(hSerial, &dcbSerialParams))
 	{
 		cout << "getting state error\n";
@@ -28,62 +36,90 @@ int main() {
 	dcbSerialParams.ByteSize = 8;
 	dcbSerialParams.StopBits = ONESTOPBIT;
 	dcbSerialParams.Parity = NOPARITY;
-	
-	int min_t = 0;
-	int max_t = 0;
-	cout << "Введите минимальную температуру" << endl;
-	cin >> min_t;
-	a.set_min_temp(min_t);
-	cout << "Введите максимальную температуру" << endl;
-	cin >> max_t;
-	a.set_max_temp(max_t);
-	/*int min_l = 0;
-	int max_l = 0;
-	cout << "Введите минимальную освещённость" << endl;
-	cin >> min_l;
-	a.set_min_light(min_l);
-	cout << "Введите максимальную освещённость" << endl;
-	cin >> max_l;
-	a.set_max_light(max_l);*/
-	ReadCOM();
+	if (!SetCommState(hSerial, &dcbSerialParams))
+	{
+		cout << "error setting serial port state\n";
+	}
+	int tmp = 0;
+	thr.detach();
+menu:
+	system("cls");
+	cout << "Меню:" << endl;
+	cout << "1. Датчик температуры" << endl;
+	cout << "2. Датчик влажности" << endl;
+	cout << "Ввод: "; 
+	cin >> tmp;
+	switch (tmp)
+	{
+	case 1:
+	menu_temp:
+		system("cls");
+		cout << "Датчик температуры:" << endl;
+		cout << "1. Задать граници температуры" << endl;
+		cout << "2. Вывести заданные граници температуры" << endl;
+		cout << "3. Вернуться в главное меню" << endl;
+		cout << "Ввод: ";
+		cin >> tmp;
+		switch (tmp)
+		{
+		case 1:
+			system("cls");
+			cout << "Введите минимальную температуру" << endl;
+			cin >> tmp;
+			a.set_min_temp(tmp);
+			cout << "Введите максимальную температуру" << endl;
+			cin >> tmp;
+			a.set_max_temp(tmp);
+			system("cls");
+			cout << "Граници температуры установлены." << endl;
+			cout << "Нажмите любую клавишу для возврата в меню." << endl;
+			_getch();
+			goto menu_temp;
+			break;
+		case 2:
+			system("cls");
+			a.print();
+			cout << "Нажмите любую клавишу для возврата в меню." << endl;
+			_getch();
+			goto menu_temp;
+		break;
 
-	cout << endl;
+		case 3:
+			
+			goto menu;
+			break;
+
+		default:
+			goto menu_temp;
+			break;
+		}
+	break;
+
+	case 2:
+		
+		break;
+
+	default:
+		goto menu;
+		break;
+	}
 	return 0;
 	}
 
-void ReadCOM()
+
+
+
+void threadFunction()
 {
+	char data[] = "temp";
+	DWORD dwSize = sizeof(data);
+	DWORD dwBytesWritten;
+	BOOL iRet = WriteFile(hSerial, data, dwSize, &dwBytesWritten, NULL);
 	DWORD iSize;
 	char sReceivedChar;
 	while (true)
 	{
-		ReadFile(hSerial, &sReceivedChar, 1, &iSize, 0);  // получаем 1 байт
-		if (iSize > 0)   // если что-то принято, выводим
-			while (1)
-			{
-
-					cout  << sReceivedChar << endl;
-			}
+		ReadFile(hSerial, &sReceivedChar, 1, &iSize, 0);  
+		a.set_temp(sReceivedChar);
 	}
 }
-	void ReadCOM2()
-	{
-		DWORD iSize2;
-		char sReceivedChar2;
-		while (true)
-		{
-			ReadFile(hSerial, &sReceivedChar2, 1, &iSize2, 0);  // получаем 1 байт
-			if (iSize2 > 0)   // если что-то принято, выводим
-				while (1)
-				{
-					if (sReceivedChar2 > a.min_light && sReceivedChar2 < a.max_light)
-
-						cout << "Освещённость: " << sReceivedChar2 << endl;
-
-					else
-
-						cout << "Освещённость !не в норме!: " << sReceivedChar2 << endl;
-
-				}
-		}
-	}
