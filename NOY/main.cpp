@@ -8,15 +8,15 @@
 
 using namespace std;
 
-void threadFunction();
+void tempFunction();
 
 HANDLE hSerial;
 temps a;
-thread thr(threadFunction);
+
 
 int main() {
 	setlocale(LC_ALL, "Russian");
-	LPCTSTR sPortName = L"COM3"; 
+	LPCTSTR sPortName = L"COM7"; 
 	hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	if (hSerial == INVALID_HANDLE_VALUE)
 	{
@@ -41,7 +41,7 @@ int main() {
 		cout << "error setting serial port state\n";
 	}
 	int tmp = 0;
-	thr.detach();
+	
 menu:
 	system("cls");
 	cout << "Меню:" << endl;
@@ -56,7 +56,7 @@ menu:
 		system("cls");
 		cout << "Датчик температуры:" << endl;
 		cout << "1. Задать граници температуры" << endl;
-		cout << "2. Вывести заданные граници температуры" << endl;
+		cout << "2. Вывести данные температуры" << endl;
 		cout << "3. Вернуться в главное меню" << endl;
 		cout << "Ввод: ";
 		cin >> tmp;
@@ -78,7 +78,7 @@ menu:
 			break;
 		case 2:
 			system("cls");
-			a.print();
+			tempFunction();
 			cout << "Нажмите любую клавишу для возврата в меню." << endl;
 			_getch();
 			goto menu_temp;
@@ -109,17 +109,19 @@ menu:
 
 
 
-void threadFunction()
+void tempFunction()
 {
 	char data[] = "temp";
 	DWORD dwSize = sizeof(data);
 	DWORD dwBytesWritten;
 	BOOL iRet = WriteFile(hSerial, data, dwSize, &dwBytesWritten, NULL);
 	DWORD iSize;
-	char sReceivedChar;
-	while (true)
-	{
-		ReadFile(hSerial, &sReceivedChar, 1, &iSize, 0);  
-		a.set_temp(sReceivedChar);
+	int sReceivedChar = 0;
+	while (true) {
+		ReadFile(hSerial, &sReceivedChar, 1, &iSize, 0);
+		if (iSize > 0)   // если что-то принято, выводим
+			cout << "Принятые данные: " << sReceivedChar << endl;
+		else
+			cout << "Не удалось принять данные" << endl;
 	}
 }
