@@ -12,11 +12,14 @@ void tempFunction();
 
 HANDLE hSerial;
 temps a;
+#define BUFSIZE 255     //ёмкость буфера
+unsigned char bufrd[BUFSIZE], bufwr[BUFSIZE]; //приёмный и передающий буферы
+
 
 
 int main() {
 	setlocale(LC_ALL, "Russian");
-	LPCTSTR sPortName = L"COM7"; 
+	LPCTSTR sPortName = L"COM5"; 
 	hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	if (hSerial == INVALID_HANDLE_VALUE)
 	{
@@ -41,15 +44,18 @@ int main() {
 		cout << "error setting serial port state\n";
 	}
 	int tmp = 0;
-	
+	cout << "Нажмите любую клавишу для продолжения." << endl;
+	_getch();
 menu:
 	system("cls");
 	cout << "Меню:" << endl;
-	cout << "1. Датчик температуры" << endl;
-	cout << "2. Датчик влажности" << endl;
+	cout << "1. Ручная настройка" << endl;
+	cout << "Готовые шаблоны:" << endl;
+	cout << "2. Оценка опасности для здоровья человека" << endl;
+	cout << "2. Оценка опасности для здоровья" << endl;
 	cout << "Ввод: "; 
 	cin >> tmp;
-	switch (tmp)
+	switch (tmp) 
 	{
 	case 1:
 	menu_temp:
@@ -111,17 +117,17 @@ menu:
 
 void tempFunction()
 {
-	char data[] = "temp";
+	char data[4];
 	DWORD dwSize = sizeof(data);
 	DWORD dwBytesWritten;
 	BOOL iRet = WriteFile(hSerial, data, dwSize, &dwBytesWritten, NULL);
-	DWORD iSize;
-	int sReceivedChar = 0;
-	while (true) {
-		ReadFile(hSerial, &sReceivedChar, 1, &iSize, 0);
-		if (iSize > 0)   // если что-то принято, выводим
-			cout << "Принятые данные: " << sReceivedChar << endl;
-		else
-			cout << "Не удалось принять данные" << endl;
-	}
+	DWORD iSize = 1;
+	string l;
+		ReadFile(hSerial, data, 4, &iSize, NULL);
+		cout << data[0] << endl;
+		cout << data[1] << endl;
+		cout << data[2];
+		cout << data[3] << endl;
+		cout << data[4];
+		
 }
